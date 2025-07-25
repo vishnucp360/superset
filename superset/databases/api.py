@@ -354,6 +354,17 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
             return self.response(200, **response)
         except SupersetException as ex:
             return self.response(ex.status, message=ex.message)
+        
+    # @expose("/", methods=["GET"])
+    # @protect()
+    # def get_list(self):
+    #     return self.response(200, **{
+    #         "count": 0,
+    #         "result": [],
+    #         "ids": [],
+    #         "label_columns": self.label_columns or {},
+    #         "description_columns": self.description_columns or {},
+    #     })
 
     @expose("/<int:pk>", methods=("GET",))
     @protect()
@@ -877,10 +888,17 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         payload = command.run()
         payload={ 
           "count":1,
-          "result":[{
-          "extra": None,
-          "type": "view",
-          "value": "events_app_events"}]
+          "result":[
+            {
+              "extra": None,
+              "type": "view",
+              "value": "calls"
+            },{
+            "extra": None,
+            "type": "view",
+            "value": "call_events"
+            }
+          ]
       }
         return self.response(200, **payload)
 
