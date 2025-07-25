@@ -22,11 +22,11 @@ set -e
 #
 /app/docker/docker-bootstrap.sh
 
-if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
-    STEP_CNT=4
-else
-    STEP_CNT=3
-fi
+# if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
+#     STEP_CNT=4
+# else
+#     STEP_CNT=3
+# fi
 
 echo_step() {
 cat <<EOF
@@ -66,14 +66,14 @@ echo_step "3" "Starting" "Setting up roles and perms"
 superset init
 echo_step "3" "Complete" "Setting up roles and perms"
 
-if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
-    # Load some data to play with
-    echo_step "4" "Starting" "Loading examples"
-    # If Cypress run which consumes superset_test_config – load required data for tests
-    if [ "$CYPRESS_CONFIG" == "true" ]; then
-        superset load_examples --load-test-data
-    else
-        superset load_examples
-    fi
-    echo_step "4" "Complete" "Loading examples"
-fi
+# if [ "$SUPERSET_LOAD_EXAMPLES" = "yes" ]; then
+#     # Load some data to play with
+#     echo_step "4" "Starting" "Loading examples"
+#     # If Cypress run which consumes superset_test_config – load required data for tests
+#     if [ "$CYPRESS_CONFIG" == "true" ]; then
+#         superset load_examples --load-test-data
+#     else
+#         superset load_examples
+#     fi
+#     echo_step "4" "Complete" "Loading examples"
+# fi

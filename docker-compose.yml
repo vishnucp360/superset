@@ -231,33 +231,33 @@ services:
     healthcheck:
       disable: true
 
-  superset-tests-worker:
-    build:
-      <<: *common-build
-    container_name: superset_tests_worker
-    command: ["/app/docker/docker-bootstrap.sh", "worker"]
-    env_file:
-      - path: docker/.env # default
-        required: true
-      - path: docker/.env-local # optional override
-        required: false
-    profiles:
-      - optional
-    environment:
-      DATABASE_HOST: localhost
-      DATABASE_DB: test
-      REDIS_CELERY_DB: 2
-      REDIS_RESULTS_DB: 3
-      REDIS_HOST: localhost
-      CELERYD_CONCURRENCY: 8
-    network_mode: host
-    depends_on:
-      superset-init:
-        condition: service_completed_successfully
-    user: *superset-user
-    volumes: *superset-volumes
-    healthcheck:
-      test: ["CMD-SHELL", "celery inspect ping -A superset.tasks.celery_app:app -d celery@$$HOSTNAME"]
+  # superset-tests-worker:
+  #   build:
+  #     <<: *common-build
+  #   container_name: superset_tests_worker
+  #   command: ["/app/docker/docker-bootstrap.sh", "worker"]
+  #   env_file:
+  #     - path: docker/.env # default
+  #       required: true
+  #     - path: docker/.env-local # optional override
+  #       required: false
+  #   profiles:
+  #     - optional
+  #   environment:
+  #     DATABASE_HOST: localhost
+  #     DATABASE_DB: test
+  #     REDIS_CELERY_DB: 2
+  #     REDIS_RESULTS_DB: 3
+  #     REDIS_HOST: localhost
+  #     CELERYD_CONCURRENCY: 8
+  #   network_mode: host
+  #   depends_on:
+  #     superset-init:
+  #       condition: service_completed_successfully
+  #   user: *superset-user
+  #   volumes: *superset-volumes
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "celery inspect ping -A superset.tasks.celery_app:app -d celery@$$HOSTNAME"]
 
 volumes:
   superset_home:

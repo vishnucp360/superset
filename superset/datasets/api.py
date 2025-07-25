@@ -299,6 +299,19 @@ class DatasetRestApi(BaseSupersetModelRestApi):
     list_outer_default_load = True
     show_outer_default_load = True
 
+
+    @expose("/distinct/<column_name>", methods=["GET"])
+    @protect()
+    def distinct(self, column_name: str) -> Response:
+        response = super().distinct(column_name)
+        data = response.json
+        filtered_result = [
+            item for item in data["result"] if item["value"] != "public"
+        ]
+        data["result"] = filtered_result
+        data["count"] = len(filtered_result)
+        return self.response(200, **data)
+    
     @expose("/", methods=("POST",))
     @protect()
     @safe

@@ -789,6 +789,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 catalog,
                 schemas,
             )
+            schemas={"metergy"}
             if params.get("upload_allowed"):
                 if not database.allow_file_upload:
                     return self.response(200, result=[])
@@ -874,6 +875,13 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
 
         command = TablesDatabaseCommand(pk, catalog_name, schema_name, force)
         payload = command.run()
+        payload={ 
+          "count":1,
+          "result":[{
+          "extra": None,
+          "type": "view",
+          "value": "events_app_events"}]
+      }
         return self.response(200, **payload)
 
     @expose("/<int:pk>/table/<path:table_name>/<schema_name>/", methods=("GET",))

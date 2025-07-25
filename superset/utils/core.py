@@ -107,7 +107,7 @@ from superset.superset_typing import (
     Metric,
 )
 from superset.utils.backports import StrEnum
-from superset.utils.database import get_example_database
+# from superset.utils.database import get_example_database
 from superset.utils.date_parser import parse_human_timedelta
 from superset.utils.hashing import md5_sha_from_dict, md5_sha_from_str
 
@@ -1077,13 +1077,13 @@ def user_label(user: User) -> str | None:
     return None
 
 
-def get_example_default_schema() -> str | None:
-    """
-    Return the default schema of the examples database, if any.
-    """
-    database = get_example_database()
-    with database.get_sqla_engine() as engine:
-        return inspect(engine).default_schema_name
+# def get_example_default_schema() -> str | None:
+#     """
+#     Return the default schema of the examples database, if any.
+#     """
+#     database = get_example_database()
+#     with database.get_sqla_engine() as engine:
+#         return inspect(engine).default_schema_name
 
 
 def backend() -> str:

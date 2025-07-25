@@ -163,50 +163,50 @@ def get_type_generator(  # pylint: disable=too-many-return-statements,too-many-b
     return lambda: b"UNKNOWN TYPE"
 
 
-def add_data(
-    columns: Optional[list[ColumnInfo]],
-    num_rows: int,
-    table_name: str,
-    append: bool = True,
-) -> None:
-    """
-    Generate synthetic data for testing migrations and features.
+# def add_data(
+#     columns: Optional[list[ColumnInfo]],
+#     num_rows: int,
+#     table_name: str,
+#     append: bool = True,
+# ) -> None:
+#     """
+#     Generate synthetic data for testing migrations and features.
 
-    If the table already exists `columns` can be `None`.
+#     If the table already exists `columns` can be `None`.
 
-    :param Optional[List[ColumnInfo]] columns: list of column names and types to create
-    :param int num_rows: how many rows to generate and insert
-    :param str table_name: name of table, will be created if it doesn't exist
-    :param bool append: if the table already exists, append data or replace?
-    """
-    # pylint: disable=import-outside-toplevel
-    from superset.utils.database import get_example_database
+#     :param Optional[List[ColumnInfo]] columns: list of column names and types to create
+#     :param int num_rows: how many rows to generate and insert
+#     :param str table_name: name of table, will be created if it doesn't exist
+#     :param bool append: if the table already exists, append data or replace?
+#     """
+#     # pylint: disable=import-outside-toplevel
+#     from superset.utils.database import get_example_database
 
-    database = get_example_database()
-    table_exists = database.has_table(Table(table_name))
+#     database = get_example_database()
+#     table_exists = database.has_table(Table(table_name))
 
-    with database.get_sqla_engine() as engine:
-        if columns is None:
-            if not table_exists:
-                raise Exception(  # pylint: disable=broad-exception-raised
-                    f"The table {table_name} does not exist. To create it you need to "
-                    "pass a list of column names and types."
-                )
+#     with database.get_sqla_engine() as engine:
+#         if columns is None:
+#             if not table_exists:
+#                 raise Exception(  # pylint: disable=broad-exception-raised
+#                     f"The table {table_name} does not exist. To create it you need to "
+#                     "pass a list of column names and types."
+#                 )
 
-            inspector = inspect(engine)
-            columns = inspector.get_columns(table_name)
+#             inspector = inspect(engine)
+#             columns = inspector.get_columns(table_name)
 
-        # create table if needed
-        column_objects = get_column_objects(columns)
-        metadata = MetaData()
-        table = DBTable(table_name, metadata, *column_objects)
-        metadata.create_all(engine)
+#         # create table if needed
+#         column_objects = get_column_objects(columns)
+#         metadata = MetaData()
+#         table = DBTable(table_name, metadata, *column_objects)
+#         metadata.create_all(engine)
 
-        if not append:
-            engine.execute(table.delete())
+#         if not append:
+#             engine.execute(table.delete())
 
-        data = generate_data(columns, num_rows)
-        engine.execute(table.insert(), data)
+#         data = generate_data(columns, num_rows)
+#         engine.execute(table.insert(), data)
 
 
 def get_column_objects(columns: list[ColumnInfo]) -> list[Column]:
