@@ -136,3 +136,19 @@ try:
     )
 except ImportError:
     logger.info("Using default Docker config...")
+
+
+from superset.security import SupersetSecurityManager
+from flask_appbuilder.security.manager import AUTH_REMOTE_USER
+
+AUTH_TYPE = AUTH_REMOTE_USER
+AUTH_REMOTE_USER_HEADER = "X-Forwarded-User"
+ENABLE_PROXY_FIX = True
+
+class CustomSecurityManager(SupersetSecurityManager):
+    def get_user(self):
+        user = super().get_user()
+        print(f"Authenticated user: {user}")
+        return user
+
+CUSTOM_SECURITY_MANAGER = CustomSecurityManager
