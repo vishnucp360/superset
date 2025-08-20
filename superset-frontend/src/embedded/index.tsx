@@ -195,6 +195,45 @@ function setupGuestClient(guestToken: string) {
   });
 }
 
+/**
+ * Handles credential-based authentication for embedded dashboards.
+ * This allows parent applications to pass username/password for direct authentication.
+ */
+async function handleCredentialAuth(username: string, password: string) {
+  try {
+    log('Attempting credential-based authentication');
+    
+    // Use SupersetClient to authenticate with the provided credentials
+    const response = await fetch('/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.getElementById('csrf_token')?.getAttribute('value') || '',
+      },
+      body: new URLSearchParams({
+        username: username,
+        password: password,
+      }),
+      credentials: 'include', // Important: include cookies for session management
+    });
+
+    if (response.ok) {
+      log('Credential authentication successful');
+      // After successful login, start the embedded app
+      start();
+    } else {
+      throw new Error(`Authentication failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    logging.error('Credential authentication failed:', error);
+    showFailureMessage(
+      t(
+        'Credential authentication failed. Please check your username and password.',
+      ),
+    );
+  }
+}
+
 function validateMessageEvent(event: MessageEvent) {
   // if (!ALLOW_ORIGINS.includes(event.origin)) {
   //   throw new Error('Message origin is not in the allowed list');
@@ -211,6 +250,22 @@ window.addEventListener('message', function embeddedPageInitializer(event) {
   } catch (err) {
     log('ignoring message unrelated to embedded comms', err, event);
     return;
+  }
+
+  // Handle credential-based authentication
+  if (event.data.type === MESSAGE_TYPE && event.data.credentials) {
+    const { username, password } = event.data.credentials;
+    if (username && password) {
+      log('Received credentials for authentication');
+      handleCredentialAuth(username, password);
+      return;
+    } else {
+      logging.error('Invalid credentials received');
+      showFailureMessage(
+        t('Invalid credentials received. Username and password are required.'),
+      );
+      return;
+    }
   }
 
   const port = event.ports?.[0];
@@ -232,6 +287,18 @@ window.addEventListener('message', function embeddedPageInitializer(event) {
         if (!started) {
           start();
           started = true;
+        }
+      },
+    );
+
+    // Add credential authentication method to Switchboard
+    Switchboard.defineMethod(
+      'authenticateWithCredentials',
+      ({ username, password }: { username: string; password: string }) => {
+        if (!started) {
+          handleCredentialAuth(username, password);
+        } else {
+          logging.warn('Authentication already completed, ignoring credentials');
         }
       },
     );
@@ -263,3 +330,7 @@ window.addEventListener('message', function embeddedPageInitializer(event) {
 });
 
 log('embed page is ready to receive messages');
+
+// Export utilities for external use
+export { createAuthenticatedSupersetIframe, createAuthenticatedSupersetIframeWithSwitchboard } from './utils/credentialAuth';
+export type { SupersetConfig, SupersetCredentials } from './utils/credentialAuth';

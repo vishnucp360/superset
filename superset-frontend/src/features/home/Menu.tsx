@@ -293,7 +293,11 @@ export function Menu({
       // Kept as is for backwards compatibility with the old theme system / superset_config.py
       link = (
         <GenericLink className="navbar-brand" to={brand.path}>
-          <Image preview={false} src={brand.icon} alt={brand.alt} />
+          {brand.icon ? (
+            <Image preview={false} src={brand.icon} alt={brand.alt} />
+          ) : (
+            <Typography.Text>{brand.alt}</Typography.Text>
+          )}
         </GenericLink>
       );
     } else {
@@ -303,7 +307,11 @@ export function Menu({
           href={brand.path}
           tabIndex={-1}
         >
-          <Image preview={false} src={brand.icon} alt={brand.alt} />
+          {brand.icon ? (
+            <Image preview={false} src={brand.icon} alt={brand.alt} />
+          ) : (
+            <Typography.Text>{brand.alt}</Typography.Text>
+          )}
         </Typography.Link>
       );
     }

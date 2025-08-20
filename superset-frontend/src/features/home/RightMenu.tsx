@@ -628,11 +628,7 @@ const RightMenu = ({
           <span>&nbsp;</span>
         </>
       )}
-      {navbarRight.user_is_anonymous && (
-        <StyledAnchor href={navbarRight.user_login_url}>
-          <Icons.LoginOutlined /> {t('Login')}
-        </StyledAnchor>
-      )}
+      {/* Login button removed as requested */}
       <TelemetryPixel
         version={navbarRight.version_string}
         sha={navbarRight.version_sha}

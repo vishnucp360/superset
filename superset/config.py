@@ -323,11 +323,11 @@ AUTH_RATE_LIMIT = "5 per second"
 # ------------------------------
 # GLOBALS FOR APP Builder
 # ------------------------------
-# Uncomment to setup Your App name
-APP_NAME = "Superset"
+# Custom branding configuration
+APP_NAME = "Custom Dashboard"
 
-# Specify the App icon
-APP_ICON = "/static/assets/images/superset-logo-horiz.png"
+# Hide the logo by setting it to an empty string
+# APP_ICON = ""
 
 # Specify where clicking the logo would take the user'
 # Default value of None will take you to '/superset/welcome'
@@ -743,8 +743,20 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES: list[dict[str, Any]] = []
 
 
 # Default theme configuration
-# Leave empty to use Superset's default theme
-THEME_DEFAULT: Theme = {}
+# Custom branding theme to hide logo and customize appearance
+THEME_DEFAULT: Theme = {
+    "token": {
+        # Override the brand logo alt text
+        "brandLogoAlt": "Custom Dashboard",
+        # Set brand logo URL to empty to hide it
+        "brandLogoUrl": "",
+        # Customize other theme properties if needed
+        "colorPrimary": "#2893B3",
+        "colorSuccess": "#5ac189",
+        "colorWarning": "#fcc700",
+        "colorError": "#e04355",
+    }
+}
 
 # Dark theme configuration
 # Applied when user selects dark mode

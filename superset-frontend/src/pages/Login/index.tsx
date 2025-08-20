@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { SupersetClient, styled, t, css } from '@superset-ui/core';
+import { SupersetClient, styled, t, css, logging } from '@superset-ui/core';
 import {
   Button,
   Card,
@@ -27,7 +27,7 @@ import {
   Typography,
   Icons,
 } from '@superset-ui/core/components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { capitalize } from 'lodash/fp';
 import getBootstrapData from 'src/utils/getBootstrapData';
 
@@ -77,6 +77,7 @@ const StyledLabel = styled(Typography.Text)`
 export default function Login() {
   const [form] = Form.useForm<LoginForm>();
   const [loading, setLoading] = useState(false);
+  const [hideUI, setHideUI] = useState(false);
 
   const bootstrapData = getBootstrapData();
 
@@ -86,11 +87,176 @@ export default function Login() {
     bootstrapData.common.conf.AUTH_USER_REGISTRATION;
 
   const onFinish = (values: LoginForm) => {
+    setHideUI(true);
+    logging.debug('[Login] Submitting credentials (username only logged):', {
+      username: values.username,
+      passwordLength: values.password?.length || 0,
+    });
+    // Also log to console for non-dev builds
+    // Note: We never log the raw password, only its length
+    // eslint-disable-next-line no-console
+    console.log('[Login] Submitting credentials (username only logged):', {
+      username: values.username,
+      passwordLength: values.password?.length || 0,
+    });
     setLoading(true);
     SupersetClient.postForm('/login/', values, '').finally(() => {
       setLoading(false);
     });
   };
+
+  // Prefill form from URL params or session storage (for redirects)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      logging.debug('[Login] Current URL:', window.location.href);
+      logging.debug('[Login] URLSearchParams:', params.toString());
+      // eslint-disable-next-line no-console
+      console.log('[Login] Current URL:', window.location.href);
+      // eslint-disable-next-line no-console
+      console.log('[Login] URLSearchParams:', params.toString());
+      const urlUsername = params.get('username') || '';
+      const urlPassword = params.get('password') || '';
+      console.log('urlPassword', urlPassword);
+      console.log('urlUsername', urlUsername);
+      let autoLoginParam = params.get('autoLogin');
+
+      // Also support credentials passed inside the `next` param (redirect target)
+      const nextParam = params.get('next');
+      if (nextParam) {
+        try {
+          // Parse the next URL and extract its query params
+          const nextUrl = new URL(nextParam, window.location.origin);
+          const nextParams = new URLSearchParams(nextUrl.search);
+          const nextUsername = nextParams.get('username') || '';
+          const nextPassword = nextParams.get('password') || '';
+          const nextAutoLogin = nextParams.get('autoLogin');
+
+          logging.debug('[Login] Detected credentials in next param:', {
+            hasUsername: !!nextUsername,
+            passwordLength: nextPassword.length,
+            nextAutoLogin,
+            nextRaw: nextParam,
+          });
+          // eslint-disable-next-line no-console
+          console.log('[Login] Detected credentials in next param:', {
+            hasUsername: !!nextUsername,
+            passwordLength: nextPassword.length,
+            nextAutoLogin,
+            nextRaw: nextParam,
+          });
+
+          if (nextUsername) sessionStorage.setItem('login_prefill_username', nextUsername);
+          if (nextPassword) sessionStorage.setItem('login_prefill_password', nextPassword);
+          if (nextAutoLogin && !autoLoginParam) autoLoginParam = nextAutoLogin;
+        } catch (err) {
+          logging.error('[Login] Failed to parse next param for credentials:', err);
+          // eslint-disable-next-line no-console
+          console.error('[Login] Failed to parse next param for credentials:', err);
+        }
+      }
+
+      // If username/password are present in the URL, store them so they survive redirects
+      if (urlUsername) sessionStorage.setItem('login_prefill_username', urlUsername);
+      if (urlPassword) sessionStorage.setItem('login_prefill_password', urlPassword);
+      if (autoLoginParam) sessionStorage.setItem('login_auto', autoLoginParam);
+
+      const storedUsername = sessionStorage.getItem('login_prefill_username') || '';
+      const storedPassword = sessionStorage.getItem('login_prefill_password') || '';
+      const autoLogin = (sessionStorage.getItem('login_auto') || '').toLowerCase() === 'true';
+
+      const username = urlUsername || storedUsername;
+      const password = urlPassword || storedPassword;
+
+      logging.debug('[Login] Parsed credentials:', {
+        username,
+        passwordLength: password.length,
+        autoLogin,
+        source: {
+          fromUrl: { hasUsername: !!urlUsername, hasPassword: !!urlPassword },
+          fromStorage: { hasUsername: !!storedUsername, hasPassword: !!storedPassword },
+        },
+      });
+      // eslint-disable-next-line no-console
+      console.log('[Login] Parsed credentials:', {
+        username,
+        passwordLength: password.length,
+        autoLogin,
+        source: {
+          fromUrl: { hasUsername: !!urlUsername, hasPassword: !!urlPassword },
+          fromStorage: { hasUsername: !!storedUsername, hasPassword: !!storedPassword },
+        },
+      });
+
+      if (username || password) {
+        console.log('username', username);
+        console.log('password', password);
+        form.setFieldsValue({ username, password });
+        logging.debug('[Login] Prefilled form fields with provided credentials');
+        // eslint-disable-next-line no-console
+        console.log('[Login] Prefilled form fields with provided credentials');
+      }
+
+      if (username && password && (autoLogin || params.get('autoLogin') === 'true')) {
+        logging.debug('[Login] Auto-login conditions met. Submitting form...');
+        // eslint-disable-next-line no-console
+        console.log('[Login] Auto-login conditions met. Submitting form...');
+        setHideUI(true);
+        onFinish({ username, password });
+      }
+    } catch (e) {
+      logging.error('[Login] Error while parsing URL/session for prefill:', e);
+      // eslint-disable-next-line no-console
+      console.error('[Login] Error while parsing URL/session for prefill:', e);
+    }
+
+    // Allow parent window to post credentials to this login page
+    const handleMessage = (event: MessageEvent) => {
+      if (!event || typeof event.data !== 'object') return;
+      const { type, username, password, autoLogin } = event.data as {
+        type?: string;
+        username?: string;
+        password?: string;
+        autoLogin?: boolean;
+      };
+      if (type !== '__login_prefill__') return;
+
+      logging.debug('[Login] Received __login_prefill__ message from parent', {
+        hasUsername: !!username,
+        passwordLength: password?.length || 0,
+        autoLogin,
+        origin: event.origin,
+      });
+      // eslint-disable-next-line no-console
+      console.log('[Login] Received __login_prefill__ message from parent', {
+        hasUsername: !!username,
+        passwordLength: password?.length || 0,
+        autoLogin,
+        origin: event.origin,
+      });
+
+      const nextUsername = username || '';
+      const nextPassword = password || '';
+      if (nextUsername) sessionStorage.setItem('login_prefill_username', nextUsername);
+      if (nextPassword) sessionStorage.setItem('login_prefill_password', nextPassword);
+      if (typeof autoLogin === 'boolean') sessionStorage.setItem('login_auto', String(autoLogin));
+
+      form.setFieldsValue({ username: nextUsername, password: nextPassword });
+      logging.debug('[Login] Form fields set from postMessage');
+      // eslint-disable-next-line no-console
+      console.log('[Login] Form fields set from postMessage');
+      if (nextUsername && nextPassword && autoLogin) {
+        logging.debug('[Login] Auto-login triggered from postMessage');
+        // eslint-disable-next-line no-console
+        console.log('[Login] Auto-login triggered from postMessage');
+        setHideUI(true);
+        onFinish({ username: nextUsername, password: nextPassword });
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [form]);
 
   const getAuthIconElement = (
     providerName: string,
@@ -108,6 +274,10 @@ export default function Login() {
     }
     return undefined;
   };
+
+  if (hideUI) {
+    return <></>;
+  }
 
   return (
     <Flex
