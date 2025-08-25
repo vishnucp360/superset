@@ -510,38 +510,56 @@ const RightMenu = ({
           title={t('Settings')}
           icon={<Icons.CaretDownOutlined iconSize="xs" />}
         >
-          {settings?.map?.((section, index) => [
-            <Menu.ItemGroup key={`${section.label}`} title={section.label}>
-              {section?.childs?.map?.(child => {
-                if (typeof child !== 'string') {
-                  const menuItemDisplay = RightMenuItemIconExtension ? (
-                    <StyledMenuItemWithIcon>
-                      {child.label}
-                      <RightMenuItemIconExtension menuChild={child} />
-                    </StyledMenuItemWithIcon>
-                  ) : (
-                    child.label
-                  );
-                  return (
-                    <Menu.Item key={`${child.label}`}>
-                      {isFrontendRoute(child.url) ? (
-                        <Link to={child.url || ''}>{menuItemDisplay}</Link>
+          {settings
+            ?.filter(section => section.label !== 'Data' && section.label !== 'User')
+            .map?.((section, index) => [
+              <Menu.ItemGroup key={`${section.label}`} title={section.label}>
+                {section?.childs
+                  ?.filter(child => {
+                    if (typeof child !== 'string') {
+                      const hiddenLabels = [
+                        'Info',
+                        'Logout',
+                        'Database Connections',
+                        'About',
+                        'List Users',
+                      ];
+                      return !hiddenLabels.includes(child.label);
+                    }
+                    return true;
+                  })
+                  .map?.(child => {
+                    if (typeof child !== 'string') {
+                      const menuItemDisplay = RightMenuItemIconExtension ? (
+                        <StyledMenuItemWithIcon>
+                          {child.label}
+                          <RightMenuItemIconExtension menuChild={child} />
+                        </StyledMenuItemWithIcon>
                       ) : (
-                        <Typography.Link href={child.url || ''}>
-                          {menuItemDisplay}
-                        </Typography.Link>
-                      )}
-                    </Menu.Item>
-                  );
-                }
-                return null;
-              })}
-            </Menu.ItemGroup>,
-            index < settings.length - 1 && (
-              <Menu.Divider key={`divider_${index}`} />
-            ),
-          ])}
+                        child.label
+                      );
+                      return (
+                        <Menu.Item key={`${child.label}`}>
+                          {isFrontendRoute(child.url) ? (
+                            <Link to={child.url || ''}>{menuItemDisplay}</Link>
+                          ) : (
+                            <Typography.Link href={child.url || ''}>
+                              {menuItemDisplay}
+                            </Typography.Link>
+                          )}
+                        </Menu.Item>
+                      );
+                    }
+                    return null;
+                  })}
+              </Menu.ItemGroup>,
+              index < settings.length - 1 && (
+                <Menu.Divider key={`divider_${index}`} />
+              ),
+            ])}
 
+          {/* Remove the User section entirely */}
+          {/*
           {!navbarRight.user_is_anonymous && [
             <Menu.Divider key="user-divider" />,
             <Menu.ItemGroup key="user-section" title={t('User')}>
@@ -559,7 +577,8 @@ const RightMenu = ({
               </Menu.Item>
             </Menu.ItemGroup>,
           ]}
-          {(navbarRight.version_string || navbarRight.version_sha) && [
+          */}
+          {/* {(navbarRight.version_string || navbarRight.version_sha) && [
             <Menu.Divider key="version-info-divider" />,
             <Menu.ItemGroup key="about-section" title={t('About')}>
               <div className="about-section">
@@ -585,7 +604,7 @@ const RightMenu = ({
                 )}
               </div>
             </Menu.ItemGroup>,
-          ]}
+          ]} */}
         </StyledSubMenu>
         {navbarRight.show_language_picker && (
           <LanguagePicker

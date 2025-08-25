@@ -193,7 +193,8 @@ export default function Login() {
         console.log('password', password);
         form.setFieldsValue({ username, password });
         setHideUI(true);
-        onFinish({ username, password });
+        // onFinish({ username, password });
+        form.submit();
         logging.debug('[Login] Prefilled form fields with provided credentials');
         // eslint-disable-next-line no-console
         console.log('[Login] Prefilled form fields with provided credentials');
