@@ -115,9 +115,8 @@ export default function Login() {
       console.log('[Login] Current URL:', window.location.href);
       // eslint-disable-next-line no-console
       console.log('[Login] URLSearchParams:', params.toString());
-      // If username and password are encrypted in the URL, decode them using atob
-      const urlUsername = atob(params.get('username') as string);
-      const urlPassword = atob(params.get('password') as string);
+      const urlUsername = params.get('username') || '';
+      const urlPassword = params.get('password') || '';
       console.log('urlPassword', urlPassword);
       console.log('urlUsername', urlUsername);
       let autoLoginParam = params.get('autoLogin');
